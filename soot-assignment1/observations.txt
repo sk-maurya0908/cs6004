@@ -1,0 +1,59 @@
+Reaching Definitions (forward analysis):
+$ java -jar sootclasses-trunk-jar-with-dependencies.jar -cp . -pp PA1 -f J -p jap.rdtagger on PA1 -print-tags -d reachingDef
+
+TestCase 1 (tc1printSum):
+almost every definition is different.
+
+
+TestCase 2 (tc2max):
+/*$i3 has reaching def: $i3 = i0*/
+/*$i3 has reaching def: $i3 = i2*/
+
+/*$i4 has reaching def: $i4 = i1*/
+/*$i4 has reaching def: $i4 = i2*/
+
+variables $i3 and $i4 receive their definitions based on conditional checks involving the input parameters i0, i1, and i2.
+
+
+TestCase 3 (tc3loop):
+/*i3 has reaching def: i3 = 0*/
+/*i3 has reaching def: i3 = i3 + 1*/
+i3:i=0 is reaching inside and well as outside the loop because of the loop condition (may analysis)
+
+
+TestCase 4 (tc4array):
+/*i4 has reaching def: i4 = 0*/
+/*i4 has reaching def: i4 = i4 + 1*/
+similar to case 3, i4:i=0 is reaching almost everywhere till the end.
+
+
+TestCase 5 (tc5recursion):
+all definitions are different.
+
+
+
+
+
+
+
+Live Variable (backward analysis):
+$ java -jar sootclasses-trunk-jar-with-dependencies.jar -cp . -pp PA1 -f J -p jap.lvtagger on PA1 -print-tags -d liveVar
+
+TestCase 1 (tc1printSum):
+analysis shows that usage of a variable generates its liveness and its assignment kills the liveness of particular variable at a program point.
+
+TestCase 2 (tc2max):
+The return statements are reached based on the control flow, and they return the value of either $i3 or $i4, which represent the maximum of the input integers.
+$i3 and $i4 liveness sustains even at the exit of $i3 = i2; and $i4 = i2; because these are based on conditions and the liveness of the variable may or may not be killed here.
+
+TestCase 3 (tc3loop):
+variable i3 and i0 are live throughout the loop as they are being used in the condition 'i3 >= i0' till i1 gets reinitialized after loop.
+when the loop condition is false, it goes to label2, and at that point, i3 is still live.
+since the function returning void, no variable is live after last print statement.
+
+TestCase 4 (tc4array):
+the method involves creating an array r0 of size i0, obtaining the length of the array (i1), and performing array access (i2 = r0[i4]) and another array access ($i3 = r0[i2]).
+The array elements and indices are live variables as they are used in calculations and print statements.
+
+TestCase 5 (tc5recursion):
+The recursive nature of the method involves the use of variables within the base case and recursive calls

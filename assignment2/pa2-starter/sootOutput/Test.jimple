@@ -67,26 +67,37 @@ public class Test extends java.lang.Object
 
     public static void bar(Node, Node)
     {
-        Node $r0, r2, $r3, $r4, r5, $r6;
+        Node $r0, $r2, r5, $r6, r7, $r8;
+        java.lang.Integer $r3;
+        int $i0;
 
-        r2 := @parameter0: Node;
+        r5 := @parameter0: Node;
 
-        r5 := @parameter1: Node;
+        r7 := @parameter1: Node;
 
         $r0 = new Node;
 
         specialinvoke $r0.<Node: void <init>()>();
 
-        $r3 = <Test: Node global>;
+        $r2 = new Node;
 
-        $r3.<Node: Node g> = r2;
+        specialinvoke $r2.<Node: void <init>()>();
 
-        $r4 = new Node;
+        $r0.<Node: Node f> = $r2;
 
-        specialinvoke $r4.<Node: void <init>()>();
+        $r3 = new java.lang.Integer;
 
-        $r0.<Node: Node f> = $r4;
+        specialinvoke $r3.<java.lang.Integer: void <init>(int)>(10);
 
+        $i0 = virtualinvoke $r3.<java.lang.Integer: int intValue()>();
+
+        if $i0 >= 20 goto label1;
+
+        $r8 = <Test: Node global>;
+
+        $r8.<Node: Node g> = r7;
+
+     label1:
         $r6 = $r0.<Node: Node f>;
 
         r5.<Node: Node f> = $r6;

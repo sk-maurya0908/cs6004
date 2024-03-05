@@ -1,6 +1,8 @@
 {
     "java.project.referencedLibraries": [
         "lib/**/*.jar",
-        "sootclasses-trunk-jar-with-dependencies.jar"
-    ]
+        "sootclasses-trunk-jar-with-dependencies.jar",
+        "gs-core-1.1.2.jar"
+    ],
+    "java.compile.nullAnalysis.mode": "automatic"
 }

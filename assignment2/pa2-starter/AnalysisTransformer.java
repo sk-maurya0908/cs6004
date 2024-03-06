@@ -13,6 +13,7 @@ import soot.jimple.internal.JInstanceFieldRef;
 import soot.jimple.internal.JInvokeStmt;
 import soot.jimple.internal.JNewExpr;
 import soot.jimple.internal.JReturnStmt;
+import soot.jimple.internal.JThrowStmt;
 import soot.jimple.internal.JVirtualInvokeExpr;
 import soot.jimple.internal.JimpleLocal;
 import soot.toolkits.graph.BriefUnitGraph;
@@ -43,7 +44,7 @@ public class AnalysisTransformer extends BodyTransformer {
         PointsToInformation fixedPoint = new PointsToInformation();
         SootMethod sm = body.getMethod();
         //System.out.println("\n\nMETHOD:-"+body.getClass());
-        System.out.println(sm.getDeclaringClass()+":"+sm.getName());
+        
         
         // Initialize points-to sets for each unit
         for (Unit unit : units) {
@@ -79,6 +80,9 @@ public class AnalysisTransformer extends BodyTransformer {
                     //System.out.println(((JVirtualInvokeExpr)invoke).getBase().toString());
                     esc.add(((JVirtualInvokeExpr)invoke).getBase().toString());
                 }
+            }
+            if(unit instanceof JThrowStmt){
+                esc.add(((JThrowStmt)unit).getOp().toString());
             }
             // Calculate points-to set for the current unit
             // Set<Value> inSet = new HashSet<>();
@@ -131,18 +135,19 @@ public class AnalysisTransformer extends BodyTransformer {
                 }
             }            
         }
-        System.out.println(ans);
-        //List<String> esc = new ArrayList<>();
+        synchronized(this){
+            if(ans != null){
+                System.out.print(sm.getDeclaringClass()+":"+sm.getName()+" ");
+                String out = ans.stream().map(Object::toString).collect(Collectors.joining(" "));
+                System.out.println(out);
+            }
+        }
     }
 
 
     private boolean dataFlowFunction(HashMap<String, HashSet<String>> stack, HashMap<String, HashSet<String>> heap, Unit u, PointsToInformation cpti, List<String> escList) {
-        //System.out.println("JAVALine#"+u.getJavaSourceStartLineNumber());
-        //System.out.println(u.getClass() +"-----"+ u.toString());
-        // HashMap<String, HashSet<String>> stack = new HashMap<>(parStack);
-        // HashMap<String, HashSet<String>> heap = new HashMap<>(parHeap);
+
         if(u instanceof JIdentityStmt){ //parameters of method
-            //System.out.println(((JIdentityStmt)u).leftBox.getValue());
             String par = ((JIdentityStmt)u).leftBox.getValue().toString();
             String parName = ((JIdentityStmt)u).rightBox.getValue().toString().split(":")[0];
             stack.put(par, new HashSet<String>());
@@ -153,14 +158,10 @@ public class AnalysisTransformer extends BodyTransformer {
             JAssignStmt stmt = (JAssignStmt) u;
             Value rhs = stmt.getRightOp();
             Value lhs = stmt.getLeftOp();
-            //System.out.println(stmt.getLeftOp().getClass()+" ====== "+stmt.getRightOp().getClass());
             if (rhs instanceof JNewExpr) { // v = new() -- rhs is JNewExpr
-                //(lhs instanceof JimpleLocal || lhs instanceof StaticFieldRef){ if//local and global variables
                 String varName = ((JimpleLocal)lhs).getName();
-                //System.out.println(varName);
                 stack.putIfAbsent(varName, new HashSet<String>());
                 stack.get(varName).add(new Integer(u.getJavaSourceStartLineNumber()).toString());
-                //System.out.println("--------------------------"+stack);
             }
             else if(rhs instanceof JimpleLocal){
                 String rName = ((JimpleLocal)rhs).getName();
@@ -175,17 +176,20 @@ public class AnalysisTransformer extends BodyTransformer {
                     stack.get(lName).addAll(stack.get(rName));
                     escList.add(lName);
                 }
-                else{ // v.f = w  -- lhs is JInstanceFieldRef
+                else if(lhs instanceof JInstanceFieldRef){ // v.f = w  -- lhs is JInstanceFieldRef
                     //System.out.println(((JInstanceFieldRef)lhs).getField().getName());
                     String baseName = ((JInstanceFieldRef)lhs).getBase().toString();
                     //String fieldName = ((JInstanceFieldRef)lhs).getField().getName();
                     // System.out.println(baseName + fieldName);
                     // System.out.println(stack.get(baseName));
                     // System.out.println(stack.get(rName));
-                    for (String i : stack.get(baseName)) {                           
-                        heap.putIfAbsent(i, new HashSet<String>());
-                        heap.get(i).addAll(stack.get(rName));
-                    }
+                    HashSet<String> bases = stack.get(baseName);
+                    if(bases != null && !bases.isEmpty()){
+                        for (String i : bases) {                           
+                            heap.putIfAbsent(i, new HashSet<String>());
+                            heap.get(i).addAll(stack.get(rName));
+                        }
+                    }                    
                 }
             }
             else if(rhs instanceof StaticFieldRef){ // v = global  -- rhs is global
@@ -212,10 +216,16 @@ public class AnalysisTransformer extends BodyTransformer {
                 //System.out.println(stack);
                 //System.out.println(heap);
                 stack.put(lName, new HashSet<String>());   
-                stack.get(baseName);         
-                for (String i : stack.get(baseName)) {
-                    //System.out.println(fieldName+i.toString());
-                    stack.get(lName).addAll(heap.get(i));
+                HashSet<String> bases = stack.get(baseName);        
+                if(bases != null && !bases.isEmpty()) {
+                    for (String i : bases) {
+                        //System.out.println(fieldName+i.toString());
+                        HashSet<String> allRef = heap.get(i);
+                        if(allRef != null && !allRef.isEmpty()){
+                            stack.get(lName).addAll(allRef);
+                        }
+                            
+                    }
                 }
                 //System.out.println(stack.get(lName));
             }

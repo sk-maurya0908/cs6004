@@ -1,0 +1,17 @@
+set terminal png
+set output 'comparison_graph.png'
+set title 'Execution Time Comparison'
+set xlabel 'Bytecode Example'
+set ylabel 'Execution Time (ms)'
+set xtics rotate
+set style fill solid
+set boxwidth 0.5
+set grid
+set key outside
+set yrange [0:*]
+set style data histogram
+set style histogram cluster gap 1
+set style histogram errorbars gap 2 lw 1
+plot \
+'< echo "1.000 0 0 0 0 0 0 0 0 0 0 0" | tr " " "\n" | cat -n' using 1:2:xtic(1) title 'Optimized', \
+'< echo "0 0 0 0 0 0 0 0 0 0 0 0" | tr " " "\n" | cat -n' using 1:2 title 'Non-Optimized'

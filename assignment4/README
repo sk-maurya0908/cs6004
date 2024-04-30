@@ -1,0 +1,67 @@
+SOOT:
+get in assignment4 folder-
+~$ cd openj9-openjdk-jdk8/build/assignment4/
+
+compilation:
+~/openj9-openjdk-jdk8/build/assignment4$ javac -cp .:sootclasses-trunk-jar-with-dependencies.jar *.java
+~/openj9-openjdk-jdk8/build/assignment4$ ../linux-x86_64-normal-server-release/images/j2sdk-image/bin/javac testcases/*.java
+
+execution:
+~/openj9-openjdk-jdk8/build/assignment4$ java -cp .:sootclasses-trunk-jar-with-dependencies.jar PA4
+
+for comparison:
+bash comparison.sh
+
+
+in testcases folder-
+cd testcases
+execution with JIT:
+
+time ./../../../../../../openj9-openjdk-jdk8/build/linux-x86_64-normal-server-release/images/j2re-image/bin/java Test3
+
+inst1:
+Result: 75
+Result: 15
+x is not greater than 10
+This line is unreachable
+z is not greater than 15
+
+real    0m0.049s
+user    0m0.052s
+sys     0m0.016s
+
+execution without JIT:
+time ./../../../../../../openj9-openjdk-jdk8/build/linux-x86_64-normal-server-release/images/j2re-image/bin/java -Xint Test3
+
+inst1:
+Result: 75
+Result: 15
+x is not greater than 10
+This line is unreachable
+z is not greater than 15
+
+real    0m0.105s
+user    0m0.038s
+sys     0m0.014s
+
+inst2:
+Result: 75
+Result: 15
+x is not greater than 10
+This line is unreachable
+z is not greater than 15
+
+real    0m0.036s
+user    0m0.024s
+sys     0m0.017s
+
+inst3:
+Result: 75
+Result: 15
+x is not greater than 10
+This line is unreachable
+z is not greater than 15
+
+real    0m0.039s
+user    0m0.035s
+sys     0m0.010s
